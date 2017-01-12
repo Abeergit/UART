@@ -1,3 +1,4 @@
+#include "xil_printf.h"
 #include "xparameters.h"
 #include "xstatus.h"
 #include "xuartlite.h"
@@ -12,12 +13,10 @@ u8 RecvBuffer[100];
 int main(void)
 {
     int Status;
-
     Status = SendAndReceive(UARTLITE_DEVICE_ID);
     if (Status != XST_SUCCESS) {
         return XST_FAILURE;
     }
-
     return XST_SUCCESS;
 
 }
@@ -26,6 +25,7 @@ int SendAndReceive(u16 DeviceId)
 {
     int Status;
     unsigned int ReceivedCount = 0;
+
 
     Status = XUartLite_Initialize(&UartLite, DeviceId);
     if (Status != XST_SUCCESS) {
@@ -37,10 +37,22 @@ int SendAndReceive(u16 DeviceId)
         return XST_FAILURE;
     }
 
-    // send
-    u8 testmsg[] = "Custom PMOD Uart Interface \r\n";
+    // transmit
+    print("JTAG Uart \r\n");
+    while(1){
+    u8 value = inbyte();
+    //xil_printf("value = %d \r\n", value);
+    XUartLite_Send(&UartLite, &value, sizeof(value));
+    while (XUartLite_IsSending(&UartLite)) {
+     }
+    }
+
+
+    u8 testmsg[] = "PMOD Uart \r\n";
+
     XUartLite_Send(&UartLite, testmsg, sizeof(testmsg));
-    usleep(200000); // 200msec
+    while (XUartLite_IsSending(&UartLite)) {
+     }
 
     // receive
     while (1) {
@@ -52,7 +64,7 @@ int SendAndReceive(u16 DeviceId)
         }
     }
 
-    print("You have received:");
+    print("Received: ");
     print(RecvBuffer);
     print("\r\n");
 
